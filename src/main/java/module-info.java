@@ -16,7 +16,7 @@ module no.ssb.rawdata.state.provider.postgres {
 
     provides StatePersistenceInitializer with PostgresStatePersistenceInitializer;
 
-    opens posgres;
+    opens postgres;
 
     exports no.ssb.rawdata.provider.state.postgres;
 
