@@ -42,25 +42,27 @@ public class PostgresStatePersistenceInitializer implements StatePersistenceInit
 
     @Override
     public StatePersistence initialize(DynamicConfiguration configuration) {
-        HikariDataSource dataSource = openDataSource(configuration.asMap());
+        HikariDataSource dataSource = openDataSource(configuration);
         return new PostgresStatePersistence(new PostgresTransactionFactory(dataSource));
     }
 
-    public static HikariDataSource openDataSource(Map<String, String> configuration) {
-        String postgresDbDriverHost = configuration.get("postgres.driver.host");
-        String postgresDbDriverPort = configuration.get("postgres.driver.port");
+    public static HikariDataSource openDataSource(DynamicConfiguration configuration) {
+        Map<String, String> configMap = configuration.asMap();
+        String postgresDbDriverHost = configMap.get("postgres.driver.host");
+        String postgresDbDriverPort = configMap.get("postgres.driver.port");
         HikariDataSource dataSource = PostgresStatePersistenceInitializer.openDataSource(
                 postgresDbDriverHost,
                 postgresDbDriverPort,
-                configuration.get("postgres.driver.user"),
-                configuration.get("postgres.driver.password"),
-                configuration.get("postgres.driver.database")
+                configMap.get("postgres.driver.user"),
+                configMap.get("postgres.driver.password"),
+                configMap.get("postgres.driver.database"),
+                configuration.evaluateToBoolean("postgres.dropOrCreateDb")
         );
         return dataSource;
     }
 
     // https://github.com/brettwooldridge/HikariCP
-    static HikariDataSource openDataSource(String postgresDbDriverHost, String postgresDbDriverPort, String postgresDbDriverUser, String postgresDbDriverPassword, String postgresDbDriverDatabase) {
+    static HikariDataSource openDataSource(String postgresDbDriverHost, String postgresDbDriverPort, String postgresDbDriverUser, String postgresDbDriverPassword, String postgresDbDriverDatabase, boolean dropOrCreateDb) {
         Properties props = new Properties();
         props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
         props.setProperty("dataSource.serverName", postgresDbDriverHost);
@@ -75,7 +77,9 @@ public class PostgresStatePersistenceInitializer implements StatePersistenceInit
         config.setMaximumPoolSize(10);
         HikariDataSource datasource = new HikariDataSource(config);
 
-        dropOrCreateDatabase(datasource);
+        if (dropOrCreateDb) {
+            dropOrCreateDatabase(datasource);
+        }
 
         return datasource;
     }
@@ -83,7 +87,7 @@ public class PostgresStatePersistenceInitializer implements StatePersistenceInit
     static void dropOrCreateDatabase(HikariDataSource datasource) {
         try {
             String initSQL = FileAndClasspathReaderUtils.readFileOrClasspathResource("postgres/init-db.sql");
-//            System.out.printf("initSQL: %s%n", initSQL);
+            System.out.printf("initSQL: %s%n", initSQL);
             Connection conn = datasource.getConnection();
             conn.beginRequest();
 
