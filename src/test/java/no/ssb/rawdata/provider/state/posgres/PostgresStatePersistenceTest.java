@@ -33,6 +33,7 @@ public class PostgresStatePersistenceTest {
         return new StoreBasedDynamicConfiguration.Builder()
                 .propertiesResource("application-defaults.properties")
                 .propertiesResource("application-test.properties")
+                .values("state.provider", "postgres")
                 .values("storage.provider", "postgres")
                 .values("postgres.driver.host", "localhost")
                 .values("postgres.driver.port", "5432")

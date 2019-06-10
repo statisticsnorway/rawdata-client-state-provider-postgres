@@ -15,6 +15,7 @@ docker-compose up
 application.properties:
 
 ```
+state.provider=postgres
 storage.provider=postgres
 postgres.driver.host=localhost
 postgres.driver.port=5432
