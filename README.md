@@ -1,2 +1,24 @@
 # rawdata-client-state-provider-postgres
-Rawdata Client State Provider PostgreSQL
+
+## Start and initialize database
+
+```
+docker-compose up
+```
+
+```
+./docker-postgres-init-db.bash
+```
+
+### Configuration
+
+application.properties:
+
+```
+storage.provider=postgres
+postgres.driver.host=localhost
+postgres.driver.port=5432
+postgres.driver.user=rdc
+postgres.driver.password=rdc
+postgres.driver.database=rawdata_client
+```
