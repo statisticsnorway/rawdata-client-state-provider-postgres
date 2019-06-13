@@ -123,24 +123,26 @@ public class PostgresStatePersistence implements StatePersistence {
 
     @Override
     public Flowable<CompletedPosition> readPositions(String namespace, String fromPosition, String toPosition) {
-        final PostgresTransaction tx = transactionFactory.createTransaction(true);
         return Single.fromCallable(() -> {
-            try {
-                PreparedStatement ps = tx.connection.prepareStatement("SELECT id, opaque_id FROM completed_positions WHERE namespace = ? AND id >= (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) AND id <= (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) ORDER BY id");
-                ps.setString(1, namespace);
-                ps.setString(2, namespace);
-                ps.setString(3, fromPosition);
-                ps.setString(4, namespace);
-                ps.setString(5, toPosition);
-                ResultSet resultSet = ps.executeQuery();
-                Deque<CompletedPosition> result = new LinkedList<>();
-                while (resultSet.next()) {
-                    String position = resultSet.getString(2);
-                    result.add(new CompletedPosition(namespace, position));
+            try (PostgresTransaction tx = transactionFactory.createTransaction(true)) {
+                try {
+                    PreparedStatement ps = tx.connection.prepareStatement("SELECT id, opaque_id FROM completed_positions WHERE namespace = ? AND id >= (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) AND id <= (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) ORDER BY id");
+                    ps.setString(1, namespace);
+                    ps.setString(2, namespace);
+                    ps.setString(3, fromPosition);
+                    ps.setString(4, namespace);
+                    ps.setString(5, toPosition);
+                    ResultSet resultSet = ps.executeQuery();
+                    Deque<CompletedPosition> result = new LinkedList<>();
+                    while (resultSet.next()) {
+                        String position = resultSet.getString(2);
+                        System.out.printf("POS: %s%n", position);
+                        result.add(new CompletedPosition(namespace, position));
+                    }
+                    return result;
+                } catch (SQLException e) {
+                    throw new PersistenceException(e);
                 }
-                return result;
-            } catch (SQLException e) {
-                throw new PersistenceException(e);
             }
         }).flatMapPublisher(result -> Flowable.fromPublisher(new CompletedPositionPublisher(result))
         );
