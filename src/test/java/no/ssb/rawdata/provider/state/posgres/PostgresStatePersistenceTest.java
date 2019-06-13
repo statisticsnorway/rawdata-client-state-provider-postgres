@@ -40,6 +40,7 @@ public class PostgresStatePersistenceTest {
                 .values("postgres.driver.user", "rdc")
                 .values("postgres.driver.password", "rdc")
                 .values("postgres.driver.database", "rawdata_client")
+                .values("", "")
                 .build();
     }
 
