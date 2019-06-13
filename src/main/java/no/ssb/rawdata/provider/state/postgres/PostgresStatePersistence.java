@@ -136,7 +136,6 @@ public class PostgresStatePersistence implements StatePersistence {
                     Deque<CompletedPosition> result = new LinkedList<>();
                     while (resultSet.next()) {
                         String position = resultSet.getString(2);
-                        System.out.printf("POS: %s%n", position);
                         result.add(new CompletedPosition(namespace, position));
                     }
                     return result;
